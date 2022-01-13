@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PHP Enum Generator</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+  <script src="https://unpkg.com/vue@3.2.26"></script>
+</head>
+<body>
+  <div id="app">
+    <div class="container">
+      <div class="row my-5">
+        <div class="col">
+          <label class="fw-bold">
+            Enum names (one per line):
+          </label>
+          <textarea
+            class="form-control"
+            v-model="input"
+            rows="10"></textarea>
+          <span class="text-muted small">
+            Separated by lines.
+          </span>
+        </div>
+        <div class="col">
+          <label class="fw-bold">
+            PHP file template:
+          </label>
+          <textarea
+            class="form-control"
+            v-model="template"
+            rows="10"></textarea>
+          <span class="text-muted small">
+            Can be empty to generate just cases.
+          </span>
+        </div>
+        <div class="col">
+          <label class="fw-bold">
+            PHP file result:
+          </label>
+          <textarea 
+            :value="output"
+            class="form-control"
+            rows="10"></textarea>
+        </div>
+      </div>
+      <div class="row my-5">
+        <div class="col">
+          <label class="mb-2 fw-bold">
+            Options:
+          </label>
+          <div class="row">
+            <div class="col-auto">
+              <div class="form-check">
+                <label class="form-check-label">
+                  <input 
+                    class="form-check-input"
+                    type="radio" 
+                    v-model="enumType"
+                    value="basic"
+                  >
+                  Basic enums 
+                  <span class="text-muted small">
+                    case NAME;
+                  </span>
+                </label>
+              </div>
+              <div class="form-check">
+                <label class="form-check-label" >
+                  <input 
+                    class="form-check-input" 
+                    type="radio" 
+                    v-model="enumType"
+                    value="string"
+                  >
+                  Backed string enums
+                  <span class="text-muted small">
+                    case NAME = 'VALUE';
+                  </span>
+                </label>
+              </div>
+              <div class="form-check">
+                <label class="form-check-label" >
+                  <input 
+                    class="form-check-input" 
+                    type="radio" 
+                    v-model="enumType"
+                    value="int"
+                  >
+                  Backed integer enums
+                  <span class="text-muted small">
+                    case NAME = 10;
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="col-auto">
+              <div class="form-check">
+                <input 
+                  class="form-check-input"
+                  type="radio" 
+                  v-model="namesTransform"
+                  :value="null"
+                >
+                <label class="form-check-label">
+                  Do not transform names
+                </label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input"
+                  type="radio" 
+                  v-model="namesTransform"
+                  value="uppercase"
+                >
+                <label class="form-check-label">
+                  Uppercase names
+                </label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input"
+                  type="radio"
+                  v-model="namesTransform"
+                  value="lowercase"
+                >
+                <label class="form-check-label">
+                  Lowercase names
+                </label>
+              </div>
+            </div>
+            <div
+              v-if="enumType === 'string'"
+              class="col-auto"
+            >
+              <div class="form-check">
+                <input 
+                  class="form-check-input"
+                  type="radio" 
+                  v-model="valuesTransform"
+                  :value="null"
+                >
+                <label class="form-check-label">
+                  Do not transform values
+                </label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input"
+                  type="radio" 
+                  v-model="valuesTransform"
+                  value="uppercase"
+                >
+                <label class="form-check-label">
+                  Uppercase values
+                </label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input"
+                  type="radio"
+                  v-model="valuesTransform"
+                  value="lowercase"
+                >
+                <label class="form-check-label">
+                  Lowercase values
+                </label>
+              </div>
+            </div>
+            <div
+              v-if="enumType === 'int'"
+              class="col-auto"
+            >
+              <label>Value starts from:</label>
+              <input 
+                type="number" 
+                v-model="backedStart"
+                class="form-control"
+              >
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row my-5">
+        <div class="col">
+          Source: 
+          <a href="https://github.com/chojnicki/php-enum-generator">
+            https://github.com/chojnicki/php-enum-generator
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const { ref, createApp, computed } = Vue
+    createApp({
+      setup() {
+        const count = ref(0)
+        const input = ref('ABC\ndef\nGhi')
+        const template = ref(`<?php
+namespace App\\Enums;
+
+enum EnumExample
+{
+    [CASES]
+}`)
+
+        const enumType = ref("string")
+        const namesTransform = ref('uppercase')
+        const valuesTransform = ref('lowercase')
+        const backedStart = ref(0)
+
+        const output = computed(() => {
+          const cases = input.value
+            .trim()
+            .split('\n')
+            .map(generateCase)
+          let result = template.value || '[CASES]'
+          if (enumType.value !== 'basic') {
+            result = result.replace(/EnumExample$/m, `$&: ${enumType.value}`)
+          }
+          result = result.replace(`${tabulation.value}[CASES]`, cases.join('\n'))
+          return result
+        })
+
+        const generateCase = (line, index) => {
+          let name = line.trim()
+          switch (namesTransform.value) {
+            case 'uppercase':
+              name = name.toUpperCase()
+              break;
+            case 'lowercase':
+              name = name.toLowerCase();
+              break;
+          }
+
+          let value = line.trim()
+          switch (valuesTransform.value) {
+            case 'uppercase':
+              value = value.toUpperCase()
+              break;
+            case 'lowercase':
+              value = value.toLowerCase();
+              break;
+          }
+
+          switch (enumType.value) {
+            case 'basic':
+              return `${tabulation.value}case ${name};`
+              break;
+            case 'string':
+              return `${tabulation.value}case ${name} = '${value}';`
+              break;
+            case 'int':
+              return `${tabulation.value}case ${name} = ${index+backedStart.value};`
+              break;
+          }
+          
+        }
+
+        const tabulation = computed(() => {
+          const casesLine = template.value
+            .split('\n')
+            .find(line => line.includes('[CASES]'))
+          return casesLine ? casesLine.split('[CASES]').shift() : ''
+        })
+
+        return {
+          input,
+          output,
+          template,
+          count,
+          enumType,
+          namesTransform,
+          valuesTransform,
+          backedStart
+        }
+      }
+    }).mount('#app')
+  </script>
+</body>
+</html>
