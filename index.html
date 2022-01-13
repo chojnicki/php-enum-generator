@@ -217,7 +217,7 @@ enum EnumExample
             .map(generateCase)
           let result = template.value || '[CASES]'
           if (enumType.value !== 'basic') {
-            result = result.replace(/EnumExample$/m, `$&: ${enumType.value}`)
+            result = result.replace(/^enum \w+$/m, `$&: ${enumType.value}`)
           }
           result = result.replace(`${tabulation.value}[CASES]`, cases.join('\n'))
           return result
