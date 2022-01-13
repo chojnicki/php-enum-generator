@@ -196,7 +196,6 @@
     const { ref, createApp, computed } = Vue
     createApp({
       setup() {
-        const count = ref(0)
         const input = ref('ABC\ndef\nGhi')
         const template = ref(`<?php
 namespace App\\Enums;
@@ -270,7 +269,6 @@ enum EnumExample
           input,
           output,
           template,
-          count,
           enumType,
           namesTransform,
           valuesTransform,
