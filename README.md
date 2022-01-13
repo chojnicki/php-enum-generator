@@ -1,6 +1,6 @@
 # PHP Enum generator
 
-Converts list (text with values separated by new lines) to [https://wiki.php.net/rfc/enumerations](PHP enum). You can choose between basic or int/string backed enumerations.
+Converts list (text with values separated by new lines) to [PHP enum](https://wiki.php.net/rfc/enumerations). You can choose between basic or int/string backed enumerations.
 
 Just reminder - PHP support's native enums from version 8.1!
 
