@@ -2,6 +2,8 @@
 
 Converts list (text with values separated by new lines) to [PHP enum](https://wiki.php.net/rfc/enumerations). You can choose between basic or int/string backed enumerations.
 
+Live version: https://chojnicki.github.io/php-enum-generator
+
 Just reminder - PHP support's native enums from version 8.1!
 
 ## Why?
